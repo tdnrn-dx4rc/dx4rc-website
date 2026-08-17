@@ -1,7 +1,7 @@
-// スプレッドシートのCSV公開URL（発行後に差し替え）
+// スプレッドシートのCSV公開URL
 const PORTFOLIO_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTb8LAj2QVhzVsviugEqJ78QEtvqzT_QH5m-UMbB2z_KNnMQM_l-IaPdzdgmmNPlfKNbKeHFhibiZG/pub?gid=0&single=true&output=csv';
 
-// GAS（Google Apps Script）のWebアプリURL
+// GASのWebアプリURL
 const GAS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzqJ725NV-30PS6kh05E_x1MX85nf5nWrvau0JYhSUEFUWHdXXI53ODHN74RmGZWXsr/exec';
 
 let allPortfolioItems = [];
@@ -12,14 +12,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const adminParam = urlParams.get('admin') === 'true';
 
-  // ?admin=true アクセス時にGAS通信認証を実施
   if (adminParam) {
     isAdmin = await authenticateAdmin();
     if (isAdmin) {
       const adminForm = document.getElementById('portfolioAdminForm');
       if (adminForm) adminForm.style.display = 'block';
     } else {
-      // 認証失敗時はURLから ?admin=true を削除
       history.replaceState(null, '', window.location.pathname);
     }
   }
@@ -31,7 +29,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderPortfolio(allPortfolioItems);
 });
 
-// スプレッドシート(GAS)と通信して管理者照合
 async function authenticateAdmin() {
   if (sessionStorage.getItem('dx4rc_admin_authed') === 'true') {
     return true;
@@ -66,9 +63,7 @@ async function authenticateAdmin() {
 }
 
 async function fetchPortfolioData() {
-  if (!PORTFOLIO_CSV_URL || PORTFOLIO_CSV_URL.includes('...')) {
-    return [];
-  }
+  if (!PORTFOLIO_CSV_URL || PORTFOLIO_CSV_URL.includes('...')) return [];
   try {
     const res = await fetch(`${PORTFOLIO_CSV_URL}&t=${Date.now()}`);
     if (!res.ok) throw new Error('Fetch failed');
@@ -80,19 +75,46 @@ async function fetchPortfolioData() {
   }
 }
 
+// カンマや改行・ダブルクォーテーションを正しくパースする関数
+function parseCSVLine(line) {
+  const result = [];
+  let start = 0;
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '"') {
+      inQuotes = !inQuotes;
+    } else if (line[i] === ',' && !inQuotes) {
+      let val = line.substring(start, i).trim();
+      if (val.startsWith('"') && val.endsWith('"')) {
+        val = val.substring(1, val.length - 1).replace(/""/g, '"');
+      }
+      result.push(val);
+      start = i + 1;
+    }
+  }
+  let lastVal = line.substring(start).trim();
+  if (lastVal.startsWith('"') && lastVal.endsWith('"')) {
+    lastVal = lastVal.substring(1, lastVal.length - 1).replace(/""/g, '"');
+  }
+  result.push(lastVal);
+  return result;
+}
+
 function parsePortfolioCSV(text) {
-  const lines = text.trim().split('\n');
+  const lines = text.trim().split(/\r?\n/);
   if (lines.length <= 1) return [];
 
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const headers = parseCSVLine(lines[0]);
   const list = [];
 
   lines.slice(1).forEach(line => {
-    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-    const item = headers.reduce((obj, header, index) => {
-      obj[header] = values[index] || '';
-      return obj;
-    }, {});
+    if (!line.trim()) return;
+    const values = parseCSVLine(line);
+    const item = {};
+    headers.forEach((h, idx) => {
+      item[h] = values[idx] || '';
+    });
 
     if (item.status !== 'deleted') {
       list.push(item);
@@ -112,7 +134,7 @@ function renderPortfolio(items) {
   }
 
   container.innerHTML = items.map(item => {
-    const tags = item.tags ? item.tags.split(',').map(t => t.trim()) : [];
+    const tags = item.tags ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
     const tagBadges = tags.map(t => `<span class="tag-badge" style="background:var(--color-bg); padding:2px 8px; border-radius:4px; font-size:0.75rem; color:var(--color-text-muted); margin-right:4px;">#${t}</span>`).join('');
 
     const statusBadge = item.status === 'wip' 
@@ -125,9 +147,10 @@ function renderPortfolio(items) {
       </button>
     ` : '';
 
-    const imageHTML = item.image_url 
+    // 画像が存在する場合のみ表示し、表示失敗時（onerror）は非表示にする
+    const imageHTML = (item.image_url && item.image_url.startsWith('http')) 
       ? `<div style="width:100%; height:180px; overflow:hidden; border-radius:var(--radius); margin-bottom:1rem; background:#f1f5f9;">
-          <img src="${item.image_url}" alt="${item.title}" style="width:100%; height:100%; object-fit:cover;">
+          <img src="${item.image_url}" alt="" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.style.display='none'">
          </div>`
       : '';
 
@@ -162,24 +185,14 @@ function renderPortfolio(items) {
 }
 
 async function deletePortfolioItem(id) {
-  if (!id) {
-    alert('IDが取得できませんでした。');
-    return;
-  }
-
-  if (!confirm(`ID: "${id}" の成果品を削除しますか？`)) {
-    return;
-  }
+  if (!id || !confirm(`ID: "${id}" の成果品を削除しますか？`)) return;
 
   try {
     await fetch(GAS_WEBHOOK_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'delete_portfolio',
-        id: id
-      })
+      body: JSON.stringify({ action: 'delete_portfolio', id: id })
     });
 
     alert('削除マークを付けました。');
@@ -198,13 +211,13 @@ function setupSearchAndFilter() {
 
     const filtered = allPortfolioItems.filter(item => {
       const matchKeyword = !keyword || 
-        item.title.toLowerCase().includes(keyword) || 
-        item.description.toLowerCase().includes(keyword) || 
-        item.tags.toLowerCase().includes(keyword);
+        (item.title && item.title.toLowerCase().includes(keyword)) || 
+        (item.description && item.description.toLowerCase().includes(keyword)) || 
+        (item.tags && item.tags.toLowerCase().includes(keyword));
 
       const matchCategory = (currentFilter === 'all') || 
-        item.category.toLowerCase().includes(currentFilter) || 
-        item.tags.toLowerCase().includes(currentFilter);
+        (item.category && item.category.toLowerCase().includes(currentFilter)) || 
+        (item.tags && item.tags.toLowerCase().includes(currentFilter));
 
       return matchKeyword && matchCategory;
     });
@@ -212,9 +225,7 @@ function setupSearchAndFilter() {
     renderPortfolio(filtered);
   };
 
-  if (searchInput) {
-    searchInput.addEventListener('input', applyFilters);
-  }
+  if (searchInput) searchInput.addEventListener('input', applyFilters);
 
   filterButtons.forEach(btn => {
     btn.addEventListener('click', () => {
