@@ -1,45 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DX4RC | 地域医療にDXを</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .desktop-nav ul {
-            display: flex !important;
-            list-style: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            gap: 1.5rem !important;
-        }
-        .desktop-nav li {
-            list-style: none !important;
-        }
-        .hero-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin-top: 2rem;
-        }
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2.5rem;
-        }
-        .feature-card {
-            padding: 2rem;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DX4RC | 地域医療にDXを</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- ヘッダー -->
+  <!-- ヘッダー -->
   <header class="site-header" id="top">
     <div class="container header-inner">
       <a class="logo" href="index.html">
@@ -51,9 +23,9 @@
       </a>
       <nav class="nav">
         <ul class="nav-list">
-          <li><a href="index.html">ホーム</a></li>
+          <li><a href="index.html" class="active">ホーム</a></li>
           <li><a href="portfolio.html">成果品ギャラリー</a></li>
-          <li><a href="devlog.html" class="active">開発ログ</a></li>
+          <li><a href="devlog.html">開発ログ</a></li>
           <li><a href="contact.html">お問い合わせ</a></li>
         </ul>
       </nav>
@@ -71,95 +43,83 @@
     </nav>
   </header>
 
-<main>
+  <main>
     <!-- メインヒーロー -->
-    <section class="hero" style="padding: 100px 0 60px 0; text-align: center;">
-        <div class="container">
-            <span class="badge" style="background: #e2e8f0; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; color: #4a5568; letter-spacing: 0.05em;">PORTFOLIO & DEVLOG</span>
-            <h1 class="hero-title" style="font-size: 2.8rem; margin-top: 1rem; margin-bottom: 1rem; line-height: 1.2;">地域医療の現場から、<br><span style="color: var(--color-primary);">身の丈に合ったDX</span>を推進する。</h1>
-            <p class="hero-lead" style="color: var(--color-text-muted); max-width: 680px; margin: 0 auto; line-height: 1.8;">
-                現役医師×単身赴任×エンジニアリング。過度なベンダー依存を避け、Google Workspaceやオープンソースを活用した持続可能な医療現場の業務改善（DX）ツールを試作・公開しています。
-            </p>
-            <div class="hero-actions">
-                <a href="portfolio.html" class="btn btn-primary" style="padding: 12px 28px; font-weight: bold;">成果品を見る</a>
-                <a href="devlog.html" class="btn" style="padding: 12px 28px; border: 1px solid var(--color-border); background: var(--color-surface);">開発ログを読む</a>
-            </div>
+    <section class="hero">
+      <div class="container text-center">
+        <span class="badge">PORTFOLIO & DEVLOG</span>
+        <h1 class="hero-title">地域医療の現場から、<br><span class="hero-title-line">身の丈に合ったDXを推進する。</span></h1>
+        <p class="hero-lead">
+          現役医師×単身赴任×エンジニアリング。過度なベンダー依存を避け、Google Workspaceやオープンソースを活用した持続可能な医療現場の業務改善（DX）ツールを試作・公開しています。
+        </p>
+        <div class="hero-actions">
+          <a href="portfolio.html" class="btn btn-primary">成果品を見る</a>
+          <a href="devlog.html" class="btn btn-outline">開発ログを読む</a>
         </div>
+      </div>
     </section>
 
-    <!-- コンテンツ紹介（カード形式） -->
-    <section class="section" style="padding: 60px 0;">
-        <div class="container">
-            <div class="section-header" style="text-align: center;">
-                <span class="section-tag" style="color: var(--color-primary); font-weight: bold;">CONTENTS</span>
-                <h2 class="section-title" style="font-size: 1.8rem; margin-top: 0.5rem;">プロジェクトのメインコンテンツ</h2>
-            </div>
-
-            <div class="feature-grid">
-                <!-- Card 1: Portfolio -->
-                <div class="card feature-card">
-                    <div>
-                        <div style="font-size: 2rem; margin-bottom: 1rem;">🚀</div>
-                        <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem;">成果品ギャラリー</h3>
-                        <p style="color: var(--color-text-muted); line-height: 1.6; font-size: 0.95rem;">
-                            スプレッドシートやGASで構築した現場用便利ツールや、各種プロトタイプをまとめて掲載。動的検索・カテゴリ絞り込みに対応しています。
-                        </p>
-                    </div>
-                    <div style="margin-top: 1.5rem;">
-                        <a href="portfolio.html" style="color: var(--color-primary); font-weight: bold; text-decoration: none;">ギャラリーを開く &rarr;</a>
-                    </div>
-                </div>
-
-                <!-- Card 2: DevLog -->
-                <div class="card feature-card">
-                    <div>
-                        <div style="font-size: 2rem; margin-bottom: 1rem;">📝</div>
-                        <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem;">開発ログ & つぶやき</h3>
-                        <p style="color: var(--color-text-muted); line-height: 1.6; font-size: 0.95rem;">
-                            Slack経由で投稿される現場からのリアルタイムな「つぶやき」と、PCから投稿する長文の「開発記録」。試行錯誤のプロセスをそのまま公開しています。
-                        </p>
-                    </div>
-                    <div style="margin-top: 1.5rem;">
-                        <a href="devlog.html" style="color: var(--color-primary); font-weight: bold; text-decoration: none;">開発ログを見る &rarr;</a>
-                    </div>
-                </div>
-
-                <!-- Card 3: Contact & FAQ -->
-                <div class="card feature-card">
-                    <div>
-                        <div style="font-size: 2rem; margin-bottom: 1rem;">☕</div>
-                        <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem;">お問い合わせ & FAQ</h3>
-                        <p style="color: var(--color-text-muted); line-height: 1.6; font-size: 0.95rem;">
-                            単身赴任の二重生活、超多趣味（ゲーム・ガジェット・3Dプリンタ・アニメ・フェス等）による時間のカオス度を率直に明かした、本音全開のFAQ付きコンタクトです。
-                        </p>
-                    </div>
-                    <div style="margin-top: 1.5rem;">
-                        <a href="contact.html" style="color: var(--color-primary); font-weight: bold; text-decoration: none;">FAQ・お問い合わせへ &rarr;</a>
-                    </div>
-                </div>
-            </div>
+    <!-- コンテンツ紹介 -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">CONTENTS</span>
+          <h2 class="section-title">プロジェクトのメインコンテンツ</h2>
         </div>
-    </section>
-</main>
 
-<!-- フッター -->
-<footer class="site-footer">
-    <div class="container" style="text-align: center; padding: 30px 0; border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 0.9rem;">
-        <p>&copy; 2026 DX4RC. All rights reserved.</p>
+        <div class="card-grid three-col">
+          <!-- Card 1 -->
+          <div class="card card-feature">
+            <div class="card-icon">🚀</div>
+            <h3>成果品ギャラリー</h3>
+            <p>スプレッドシートやGASで構築した現場用便利ツールや、各種プロトタイプをまとめて掲載。動的検索・カテゴリ絞り込みに対応しています。</p>
+            <div style="margin-top: 1.5rem;">
+              <a href="portfolio.html" class="btn-link">ギャラリーを開く &rarr;</a>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="card card-feature">
+            <div class="card-icon">📝</div>
+            <h3>開発ログ & つぶやき</h3>
+            <p>Slack経由で投稿される現場からのリアルタイムな「つぶやき」と、PCから投稿する長文の「開発記録」。試行錯誤のプロセスをそのまま公開しています。</p>
+            <div style="margin-top: 1.5rem;">
+              <a href="devlog.html" class="btn-link">開発ログを見る &rarr;</a>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="card card-feature">
+            <div class="card-icon">☕</div>
+            <h3>お問い合わせ & FAQ</h3>
+            <p>単身赴任の二重生活、超多趣味（ゲーム・ガジェット・3Dプリンタ・アニメ・フェス等）による時間のカオス度を率直に明かした、本音全開のFAQ付きコンタクトです。</p>
+            <div style="margin-top: 1.5rem;">
+              <a href="contact.html" class="btn-link">FAQ・お問い合わせへ &rarr;</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- フッター -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; 2026 DX4RC. All rights reserved.</p>
+      <p class="admin-link"><a href="portfolio.html?admin=true">Admin Login</a></p>
     </div>
-</footer>
+  </footer>
 
-<script>
-    // モバイルナビ制御
+  <script>
     const toggle = document.querySelector('.nav-toggle');
     const mobileNav = document.getElementById('mobile-nav');
     if (toggle && mobileNav) {
-        toggle.addEventListener('click', () => {
-            const expanded = toggle.getAttribute('aria-expanded') === 'true';
-            toggle.setAttribute('aria-expanded', String(!expanded));
-            mobileNav.hidden = expanded;
-        });
+      toggle.addEventListener('click', () => {
+        const expanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!expanded));
+        mobileNav.hidden = expanded;
+      });
     }
-</script>
+  </script>
 </body>
 </html>

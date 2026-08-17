@@ -45,54 +45,60 @@
     </nav>
   </header>
 
-  <main id="main" class="section">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">DevLog</span>
-        <h2 class="section-title">開発ログ & つぶやき</h2>
-        <p class="section-desc">現場からの思考のログ、進捗のつぶやきをリアルタイムに更新しています。</p>
-      </div>
-
-      <!-- 管理者モード（?admin=true）投稿フォーム -->
-      <section id="devlogAdminForm" style="display: none; margin-bottom: 2.5rem;">
-        <div class="card" style="padding: 2rem; border: 2px dashed var(--color-primary); background: var(--color-surface); border-radius: var(--radius);">
-          <h3 style="margin-top:0; margin-bottom: 1rem;">📝 開発ログの新規投稿 (管理者用)</h3>
-          <form id="devlogPostForm">
-            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
-              <div style="flex: 2; min-width: 200px;">
-                <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">タイトル（長文ログ時）</label>
-                <input type="text" id="dlTitle" class="form-control" placeholder="例: スプレッドシート連携の非同期処理について" style="width:100%; padding:0.5rem; box-sizing:border-box;">
-              </div>
-              <div style="flex: 1; min-width: 150px;">
-                <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">投稿種別</label>
-                <select id="dlType" class="form-control" style="width:100%; padding:0.5rem; box-sizing:border-box;">
-                  <option value="macro">📝 開発記録 (長文)</option>
-                  <option value="micro">💬 つぶやき (短文)</option>
-                </select>
-              </div>
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-              <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">本文 *</label>
-              <textarea id="dlContent" class="form-control" rows="4" required placeholder="思考ログや進捗状況を入力..." style="width:100%; padding:0.5rem; box-sizing:border-box;"></textarea>
-            </div>
-
-            <button type="submit" id="devlogSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-weight: bold; cursor: pointer;">投稿する</button>
-          </form>
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">DevLog</span>
+          <h2 class="section-title">開発ログ & つぶやき</h2>
+          <p class="section-desc">現場からの思考のログ、進捗のつぶやきをリアルタイムに更新しています。</p>
         </div>
-      </section>
-
-      <!-- 動的ログ描画エリア -->
-      <div id="devlogGrid" style="max-width: 800px; margin: 0 auto;">
-        <p style="text-align: center; color: var(--color-text-muted);">ログデータを読み込み中...</p>
       </div>
+    </section>
 
-    </div>
+    <section class="section">
+      <div class="container">
+        <!-- 管理者モード（?admin=true）投稿フォーム -->
+        <section id="devlogAdminForm" style="display: none; margin-bottom: 2.5rem;">
+          <div class="card" style="padding: 2rem; border: 2px dashed var(--color-primary);">
+            <h3 style="margin-top:0; margin-bottom: 1rem;">📝 開発ログの新規投稿 (管理者用)</h3>
+            <form id="devlogPostForm">
+              <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                <div style="flex: 2; min-width: 200px;">
+                  <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">タイトル（長文ログ時）</label>
+                  <input type="text" id="dlTitle" class="form-control" placeholder="例: スプレッドシート連携の非同期処理について" style="width:100%; padding:0.5rem;">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                  <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">投稿種別</label>
+                  <select id="dlType" class="form-control" style="width:100%; padding:0.5rem;">
+                    <option value="macro">📝 開発記録 (長文)</option>
+                    <option value="micro">💬 つぶやき (短文)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 1.5rem;">
+                <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">本文 *</label>
+                <textarea id="dlContent" class="form-control" rows="4" required placeholder="思考ログや進捗状況を入力..." style="width:100%; padding:0.5rem;"></textarea>
+              </div>
+
+              <button type="submit" id="devlogSubmitBtn" class="btn btn-primary" style="width: 100%;">投稿する</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- 動的ログ描画エリア -->
+        <div id="devlogGrid" style="max-width: 800px; margin: 0 auto;">
+          <p style="text-align: center; color: var(--color-text-muted);">ログデータを読み込み中...</p>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
-    <div class="container" style="text-align: center; padding: 30px 0; border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 0.9rem;">
-        <p>&copy; 2026 DX4RC. All rights reserved.</p>
+    <div class="container footer-inner">
+      <p>&copy; 2026 DX4RC. All rights reserved.</p>
+      <p class="admin-link"><a href="devlog.html?admin=true">Admin Login</a></p>
     </div>
   </footer>
 </body>
