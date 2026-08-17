@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="地域医療DXプロジェクトの成果品・開発ギャラリー">
+  <title>成果品ギャラリー | dx4regionalcare.com</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="portfolio.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">本文へスキップ</a>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">
+        <img src="dx4rc_logo.png" alt="DX for Regional Care" class="logo-mark">
+        <span class="logo-text">
+          <span class="logo-title">地域医療にDXを</span>
+          <span class="logo-sub">dx4regionalcare.com</span>
+        </span>
+      </a>
+      <nav class="nav">
+        <ul class="nav-list">
+          <li><a href="index.html">ホーム</a></li>
+          <li><a href="portfolio.html" class="active">成果品ギャラリー</a></li>
+          <li><a href="devlog.html">開発ログ</a></li>
+          <li><a href="contact.html">お問い合わせ</a></li>
+        </ul>
+      </nav>
+      <button class="nav-toggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="mobile-nav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="モバイルナビゲーション" hidden>
+      <ul>
+        <li><a href="index.html">ホーム</a></li>
+        <li><a href="portfolio.html">成果品ギャラリー</a></li>
+        <li><a href="devlog.html">開発ログ</a></li>
+        <li><a href="contact.html">お問い合わせ</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Portfolio</span>
+        <h2 class="section-title">成果品ギャラリー</h2>
+        <p class="section-desc">現場の課題から生まれたアプリや自動化ツールの紹介です。</p>
+      </div>
+
+      <!-- 管理者モード（?admin=true）投稿フォーム -->
+      <section id="portfolioAdminForm" style="display: none; margin-bottom: 2.5rem;">
+        <div class="card" style="padding: 2rem; border: 2px dashed var(--color-primary); background: var(--color-surface); border-radius: var(--radius);">
+          <h3 style="margin-top:0; margin-bottom: 1rem;">💡 成果品・アイデアの新規投稿 (管理者用)</h3>
+          <form id="portfolioPostForm">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 150px;">
+                <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">ID (英数ハイフン)</label>
+                <input type="text" id="pfId" class="form-control" placeholder="例: my-app" style="width:100%; padding:0.5rem; box-sizing:border-box;">
+              </div>
+              <div style="flex: 2; min-width: 200px;">
+                <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">タイトル *</label>
+                <input type="text" id="pfTitle" class="form-control" required placeholder="例: 診療所向け患者予約管理GAS" style="width:100%; padding:0.5rem; box-sizing:border-box;">
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 150px;">
+                <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">カテゴリ</label>
+                <input type="text" id="pfCategory" class="form-control" placeholder="例: 現場自動化" style="width:100%; padding:0.5rem; box-sizing:border-box;">
+              </div>
+              <div style="flex: 1; min-width: 120px;">
+                <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">ステータス</label>
+                <select id="pfStatus" class="form-control" style="width:100%; padding:0.5rem; box-sizing:border-box;">
+                  <option value="live">LIVE (運用・公開中)</option>
+                  <option value="wip">WIP (試作・開発中)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- タグ選択（チェックボックス方式） -->
+            <div style="margin-bottom: 1rem;">
+              <label style="display:block; font-weight:bold; margin-bottom:0.5rem; font-size:0.9rem;">タグ (複数選択可)</label>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; padding: 0.75rem 1rem; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg);">
+                <label style="font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="pfTag" value="clinical"> clinical (臨床・学習)</label>
+                <label style="font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="pfTag" value="automation"> automation (現場自動化)</label>
+                <label style="font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="pfTag" value="ai"> ai (AI / LLM)</label>
+                <label style="font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="pfTag" value="gas"> gas (GAS / 連携)</label>
+                <label style="font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="pfTag" value="sheets"> sheets</label>
+                <label style="font-size:0.88rem; cursor:pointer;"><input type="checkbox" name="pfTag" value="slack"> slack</label>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">概要・解決する課題</label>
+              <textarea id="pfDescription" class="form-control" rows="3" placeholder="課題や開発背景" style="width:100%; padding:0.5rem; box-sizing:border-box;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">自作する際のアドバイス・コツ</label>
+              <textarea id="pfAdvice" class="form-control" rows="3" placeholder="実装上の注意点や工夫など" style="width:100%; padding:0.5rem; box-sizing:border-box;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">スクリーンショット画像</label>
+              <input type="file" id="pfImageFile" accept="image/*" class="form-control" style="width:100%;">
+            </div>
+
+            <button type="submit" id="pfSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-weight: bold; cursor: pointer;">アイデアを公開する</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- コントロール（検索・フィルター） -->
+      <div class="controls-group" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+        <input type="text" id="searchInput" placeholder="タイトルや説明で検索..." class="search-box" style="padding: 0.75rem 1rem; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+        <div class="filter-group" id="filterGroup" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+          <button class="btn-filter active" data-filter="all">すべて</button>
+          <button class="btn-filter" data-filter="clinical">臨床・学習</button>
+          <button class="btn-filter" data-filter="automation">現場自動化</button>
+          <button class="btn-filter" data-filter="ai">AI / LLM</button>
+          <button class="btn-filter" data-filter="gas">GAS / 連携</button>
+        </div>
+      </div>
+
+      <!-- 動的カード描画エリア -->
+      <div class="card-grid two-col" id="portfolioGrid">
+        <p style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted);">データを読み込み中...</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container" style="text-align: center; padding: 30px 0; border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 0.9rem;">
+        <p>&copy; 2026 DX4RC. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

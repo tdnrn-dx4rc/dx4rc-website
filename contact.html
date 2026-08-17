@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お問い合わせ | 地域医療にDXを</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* contact.html 固有スタイル */
+        .faq-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .accordion-item {
+            border: 1px solid var(--color-border);
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: border-color var(--transition);
+        }
+
+        .accordion-item:hover {
+            border-color: var(--color-border-strong);
+        }
+
+        .accordion-header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: var(--color-bg-elevated);
+            transition: background var(--transition-fast);
+        }
+
+        .accordion-header:hover {
+            background: var(--color-bg);
+        }
+
+        .accordion-title {
+            font-weight: 700;
+            font-size: 16px;
+            padding-right: 20px;
+        }
+
+        .accordion-icon {
+            width: 24px;
+            height: 24px;
+            transition: transform var(--transition);
+        }
+
+        .accordion-item.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            padding: 0 24px;
+        }
+
+        .accordion-item.active .accordion-content {
+            max-height: 600px;
+            padding: 0 24px 24px 24px;
+        }
+
+        .contact-form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background: var(--color-bg-elevated);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: var(--color-text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: var(--color-surface);
+            font-size: 15px;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-accent-glow);
+        }
+
+        .success-message {
+            display: none;
+            padding: 20px;
+            background: var(--color-success-bg, #f0fff4);
+            border: 1px solid var(--color-success-border, #68d391);
+            border-radius: var(--radius);
+            color: var(--color-text);
+            margin-bottom: 24px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin-left: 10px;
+            animation: rotation 2s infinite linear;
+            width: 16px;
+            height: 16px;
+        }
+
+        @keyframes rotation {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">
+        <img src="dx4rc_logo.png" alt="DX for Regional Care" class="logo-mark">
+        <span class="logo-text">
+          <span class="logo-title">地域医療にDXを</span>
+          <span class="logo-sub">dx4regionalcare.com</span>
+        </span>
+      </a>
+      <nav class="nav">
+        <ul class="nav-list">
+          <li><a href="index.html">ホーム</a></li>
+          <li><a href="portfolio.html">成果品ギャラリー</a></li>
+          <li><a href="devlog.html" class="active">開発ログ</a></li>
+          <li><a href="contact.html">お問い合わせ</a></li>
+        </ul>
+      </nav>
+      <button class="nav-toggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="mobile-nav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="モバイルナビゲーション" hidden>
+      <ul>
+        <li><a href="index.html">ホーム</a></li>
+        <li><a href="portfolio.html">成果品ギャラリー</a></li>
+        <li><a href="devlog.html">開発ログ</a></li>
+        <li><a href="contact.html">お問い合わせ</a></li>
+      </ul>
+    </nav>
+  </header>
+
+<main>
+    <section class="hero">
+        <div class="container" style="text-align: center;">
+            <span class="badge">CONTACT</span>
+            <h1 class="hero-title">お問い合わせ</h1>
+            <p class="hero-lead">ご相談・お問い合わせはこちらから。事前にFAQをご確認ください。</p>
+        </div>
+    </section>
+
+    <!-- FAQ セクション -->
+    <section class="section" id="faq">
+        <div class="container">
+            <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="section-tag">STEP 01</span>
+                <h2 class="section-title">よくある質問 (FAQ)</h2>
+                <p class="section-desc">スムーズなコミュニケーションのため、事前に以下をご確認ください。</p>
+            </div>
+
+            <div class="faq-section">
+                <!-- FAQ 1 -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span class="accordion-title">費用やサポート費用はかかりますか？</span>
+                        <svg class="accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="accordion-content">
+                        <p>費用は**完全無料**です。ただし「タダだから」と過度な期待を抱くのはおやめください。非営利のボランティア精神で運営しているため、手厚いアフターフォローや手取り足取りのサポートは期待できません。</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 2 -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span class="accordion-title">どんな相談・依頼でも受けてくれますか？</span>
+                        <svg class="accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="accordion-content">
+                        <p>私自身の<strong>「興味・パッション」</strong>が湧くかが唯一の判断基準です。「地域医療が面白くなりそうか」に心が動かない案件は、お断り（あるいはスルー）させていただく場合があります点をご了承ください。</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 3 -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span class="accordion-title">なぜ返信や進捗が気まぐれなのですか？</span>
+                        <svg class="accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="accordion-content">
+                        <p>本業（医師業務・当直）と<strong>「単身赴任の二重生活」</strong>に加えて、<strong>深刻な趣味の渋滞（超多趣味）を起こしているため</strong>です。新作ゲーム、アニメ、Web小説、新ガジェット検証、3Dプリンター、音楽フェスなど、コードを書く以外にも人生で忙しくしています。返信は「忘れた頃に届く」マインドでお待ちください。※督促されるとモチベーションが下がって作業が遅れます。</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 4 -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span class="accordion-title">納期やスケジュールの約束はできますか？</span>
+                        <svg class="accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="accordion-content">
+                        <p><strong>厳しい納期がある案件は一切お引き受けできません。</strong>進捗は「当直の平和さ」「二重生活の疲労度」「3Dプリンターの造形成功率」「新作ゲーム・アニメの消化状況」に完全に依存します。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- フォーム セクション -->
+    <section class="section" id="contact-form" style="padding-bottom: 80px;">
+        <div class="container">
+            <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="section-tag">STEP 02</span>
+                <h2 class="section-title">お問い合わせフォーム</h2>
+                <p class="section-desc">上記をご理解いただいた上で、それでも連絡したい！という方はこちらからどうぞ。</p>
+            </div>
+
+            <div class="contact-form-container">
+                <div id="successMsg" class="success-message">
+                    🎉 メッセージが送信されました！気長にお待ちください。
+                </div>
+
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label for="name">お名前</label>
+                        <input type="text" id="name" name="name" class="form-control" required placeholder="例: 医療 太郎">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">メールアドレス</label>
+                        <input type="email" id="email" name="email" class="form-control" required placeholder="example@mail.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">件名</label>
+                        <input type="text" id="subject" name="subject" class="form-control" required placeholder="例: システム開発・アイデアの相談">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">メッセージ内容</label>
+                        <textarea id="message" name="message" class="form-control" rows="6" required placeholder="ご相談内容を自由にご記入ください。"></textarea>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button type="submit" class="btn btn-primary" id="submitBtn" style="padding: 12px 36px; font-size: 1rem; cursor: pointer;">
+                            <span>送信する</span>
+                            <span class="loading-spinner" id="spinner"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="container" style="text-align: center; padding: 30px 0; border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 0.9rem;">
+        <p>&copy; 2026 DX4RC. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="contact.js"></script>
+</body>
+</html>

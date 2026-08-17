@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="地域医療DXプロジェクトの開発ログと日々の思考ログ">
+  <title>開発ログ & つぶやき | dx4regionalcare.com</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="devlog.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">本文へスキップ</a>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">
+        <img src="dx4rc_logo.png" alt="DX for Regional Care" class="logo-mark">
+        <span class="logo-text">
+          <span class="logo-title">地域医療にDXを</span>
+          <span class="logo-sub">dx4regionalcare.com</span>
+        </span>
+      </a>
+      <nav class="nav">
+        <ul class="nav-list">
+          <li><a href="index.html">ホーム</a></li>
+          <li><a href="portfolio.html">成果品ギャラリー</a></li>
+          <li><a href="devlog.html" class="active">開発ログ</a></li>
+          <li><a href="contact.html">お問い合わせ</a></li>
+        </ul>
+      </nav>
+      <button class="nav-toggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="mobile-nav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="モバイルナビゲーション" hidden>
+      <ul>
+        <li><a href="index.html">ホーム</a></li>
+        <li><a href="portfolio.html">成果品ギャラリー</a></li>
+        <li><a href="devlog.html">開発ログ</a></li>
+        <li><a href="contact.html">お問い合わせ</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">DevLog</span>
+        <h2 class="section-title">開発ログ & つぶやき</h2>
+        <p class="section-desc">現場からの思考のログ、進捗のつぶやきをリアルタイムに更新しています。</p>
+      </div>
+
+      <!-- 管理者モード（?admin=true）投稿フォーム -->
+      <section id="devlogAdminForm" style="display: none; margin-bottom: 2.5rem;">
+        <div class="card" style="padding: 2rem; border: 2px dashed var(--color-primary); background: var(--color-surface); border-radius: var(--radius);">
+          <h3 style="margin-top:0; margin-bottom: 1rem;">📝 開発ログの新規投稿 (管理者用)</h3>
+          <form id="devlogPostForm">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+              <div style="flex: 2; min-width: 200px;">
+                <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">タイトル（長文ログ時）</label>
+                <input type="text" id="dlTitle" class="form-control" placeholder="例: スプレッドシート連携の非同期処理について" style="width:100%; padding:0.5rem; box-sizing:border-box;">
+              </div>
+              <div style="flex: 1; min-width: 150px;">
+                <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">投稿種別</label>
+                <select id="dlType" class="form-control" style="width:100%; padding:0.5rem; box-sizing:border-box;">
+                  <option value="macro">📝 開発記録 (長文)</option>
+                  <option value="micro">💬 つぶやき (短文)</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <label style="display:block; font-weight:bold; margin-bottom:0.3rem; font-size:0.9rem;">本文 *</label>
+              <textarea id="dlContent" class="form-control" rows="4" required placeholder="思考ログや進捗状況を入力..." style="width:100%; padding:0.5rem; box-sizing:border-box;"></textarea>
+            </div>
+
+            <button type="submit" id="devlogSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-weight: bold; cursor: pointer;">投稿する</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 動的ログ描画エリア -->
+      <div id="devlogGrid" style="max-width: 800px; margin: 0 auto;">
+        <p style="text-align: center; color: var(--color-text-muted);">ログデータを読み込み中...</p>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container" style="text-align: center; padding: 30px 0; border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 0.9rem;">
+        <p>&copy; 2026 DX4RC. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
