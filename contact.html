@@ -9,11 +9,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="contact.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">本文へスキップ</a>
 
+  <!-- ヘッダー -->
   <header class="site-header" id="top">
     <div class="container header-inner">
       <a class="logo" href="index.html">
@@ -46,6 +46,7 @@
   </header>
 
   <main id="main">
+    <!-- 下層用ヘッダー -->
     <section class="page-hero">
       <div class="container">
         <div class="section-header">
@@ -56,6 +57,7 @@
       </div>
     </section>
 
+    <!-- STEP 01: FAQ セクション -->
     <section class="section">
       <div class="container" style="max-width: 800px; margin: 0 auto;">
         <div class="section-header" style="margin-bottom: 2rem;">
@@ -91,7 +93,7 @@
               <span style="color: var(--color-primary);">&#x25BC;</span>
             </summary>
             <p style="margin-top: 1rem; color: var(--color-text-muted); line-height: 1.7; font-size: 0.95rem;">
-              当方は医師業務・二重生活・エンジニアリングに加え、圧倒的多趣味（ガジェット、3Dプリンタ、ゲーム、アニメ、フェス、料理研究、YouTube・TikToc視聴、飲み歩き等）のカオスなスケジュールの中で開発を行っています。急ぎ案件への即時レスポンスは難しいためご容赦ください。
+              当方は医師業務・二重生活・エンジニアリングに加え、圧倒的多趣味（ガジェット、3Dプリンタ、ゲーム、アニメ、フェス、料理研究、YouTube・TikTok視聴、飲み歩き等）のカオスなスケジュールの中で開発を行っています。急ぎ案件への即時レスポンスは難しいためご容赦ください。
             </p>
           </details>
 
@@ -107,8 +109,41 @@
         </div>
       </div>
     </section>
+
+    <!-- STEP 02: お問い合わせフォーム -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container" style="max-width: 800px; margin: 0 auto;">
+        <div class="section-header" style="margin-bottom: 2rem;">
+          <span class="badge">STEP 02</span>
+          <h2 class="section-title" style="font-size: 2rem; margin-top: 0.5rem;">メッセージ送信</h2>
+          <p class="section-desc">FAQをご確認の上、以下のフォームよりご連絡ください。</p>
+        </div>
+
+        <div class="card" style="padding: 2rem; border-radius: var(--radius); background: var(--color-surface); border: 1px solid var(--color-border);">
+          <form id="contactForm">
+            <div style="margin-bottom: 1.25rem;">
+              <label for="contactName" style="display:block; font-weight:bold; margin-bottom:0.4rem; font-size:0.95rem;">お名前 / 組織名 *</label>
+              <input type="text" id="contactName" required placeholder="例: 医療 太郎（〇〇病院）" style="width:100%; padding:0.6rem; border:1px solid var(--color-border); border-radius:var(--radius); font-size:0.95rem;">
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+              <label for="contactEmail" style="display:block; font-weight:bold; margin-bottom:0.4rem; font-size:0.95rem;">メールアドレス *</label>
+              <input type="email" id="contactEmail" required placeholder="example@domain.com" style="width:100%; padding:0.6rem; border:1px solid var(--color-border); border-radius:var(--radius); font-size:0.95rem;">
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <label for="contactMessage" style="display:block; font-weight:bold; margin-bottom:0.4rem; font-size:0.95rem;">お問い合わせ内容 *</label>
+              <textarea id="contactMessage" rows="5" required placeholder="ご相談内容やメッセージをご記入ください..." style="width:100%; padding:0.6rem; border:1px solid var(--color-border); border-radius:var(--radius); font-size:0.95rem; line-height:1.6;"></textarea>
+            </div>
+
+            <button type="submit" id="contactSubmitBtn" class="btn btn-primary" style="width:100%; padding:0.8rem; font-weight:bold; font-size:1rem; cursor:pointer;">送信する</button>
+          </form>
+        </div>
+      </div>
+    </section>
   </main>
 
+  <!-- フッター -->
   <footer class="site-footer">
     <div class="container footer-inner">
       <p>&copy; 2026 DX4RC. All rights reserved.</p>
@@ -117,6 +152,7 @@
   </footer>
 
   <script>
+    // モバイル用ナビゲーション開閉制御
     const toggle = document.querySelector('.nav-toggle');
     const mobileNav = document.getElementById('mobile-nav');
     if (toggle && mobileNav) {
@@ -124,6 +160,43 @@
         const expanded = toggle.getAttribute('aria-expanded') === 'true';
         toggle.setAttribute('aria-expanded', String(!expanded));
         mobileNav.hidden = expanded;
+      });
+    }
+
+    // お問い合わせフォーム送信制御 (GAS連携)
+    const GAS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzqJ725NV-30PS6kh05E_x1MX85nf5nWrvau0JYhSUEFUWHdXXI53ODHN74RmGZWXsr/exec';
+    const form = document.getElementById('contactForm');
+    
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('contactSubmitBtn');
+        btn.disabled = true;
+        btn.innerText = '送信中...';
+
+        const payload = {
+          action: 'contact',
+          name: document.getElementById('contactName').value.trim(),
+          email: document.getElementById('contactEmail').value.trim(),
+          message: document.getElementById('contactMessage').value.trim()
+        };
+
+        try {
+          await fetch(GAS_WEBHOOK_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          alert('お問い合わせを受け付けました。ご連絡ありがとうございます！');
+          form.reset();
+        } catch (err) {
+          alert('送信に失敗しました。時間をおいて再度お試しください。');
+        } finally {
+          btn.disabled = false;
+          btn.innerText = '送信する';
+        }
       });
     }
   </script>
