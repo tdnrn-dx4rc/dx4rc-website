@@ -82,23 +82,80 @@ async function fetchDevlogData() {
   }
 }
 
-// CSVパース処理 [A:timestamp, B:type, C:title, D:body]
+/**
+ * 改行・ダブルクォーテーションに対応した堅牢なCSVパース処理
+ */
 function parseDevlogCSV(text) {
-  const lines = text.trim().split('\n');
-  if (lines.length <= 1) return [];
+  if (!text) return [];
+
+  const rows = [];
+  let currentRow = [];
+  let currentVal = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"') {
+      if (insideQuotes && nextChar === '"') {
+        currentVal += '"';
+        i++;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+    } else if (char === ',' && !insideQuotes) {
+      currentRow.push(currentVal.trim());
+      currentVal = '';
+    } else if ((char === '\r' || char === '\n') && !insideQuotes) {
+      if (char === '\r' && nextChar === '\n') i++;
+      currentRow.push(currentVal.trim());
+      if (currentRow.some(val => val.length > 0)) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentVal = '';
+    } else {
+      currentVal += char;
+    }
+  }
+
+  if (currentVal || currentRow.length > 0) {
+    currentRow.push(currentVal.trim());
+    if (currentRow.some(val => val.length > 0)) {
+      rows.push(currentRow);
+    }
+  }
+
+  if (rows.length === 0) return [];
+
+  // ヘッダー行（または日付でない行）のスキップ判定
+  const isFirstRowHeader = isNaN(Date.parse(rows[0][0]));
+  const dataRows = isFirstRowHeader ? rows.slice(1) : rows;
 
   const list = [];
-
-  // ヘッダー行を除いて1行ずつ処理
-  lines.slice(1).forEach(line => {
-    // カンマ区切り（簡易パース）
-    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+  dataRows.forEach(values => {
     if (values.length < 2) return;
 
     const timestamp = values[0] || '';
-    const type = values[1] || 'micro';
-    const title = values[2] || '';
-    const body = values[3] || values[2] || ''; // 列順補正
+    const colB = values[1] || '';
+    const colC = values[2] || '';
+    const colD = values[3] || '';
+
+    // 列順の揺れ（過去ログと最新ログ）を吸収
+    let type = 'micro';
+    let title = '';
+    let body = colD || colC;
+
+    if (colB === 'micro' || colB === 'macro' || colB === 'slack') {
+      type = colB;
+      title = colC;
+    } else if (colC === 'micro' || colC === 'macro' || colC === 'slack') {
+      type = colC;
+      title = colB;
+    } else {
+      title = colB;
+    }
 
     list.push({
       timestamp: timestamp,
@@ -108,7 +165,7 @@ function parseDevlogCSV(text) {
     });
   });
 
-  return list.reverse(); // 最新順
+  return list.reverse(); // 最新順に並び替え
 }
 
 // ログの描画
