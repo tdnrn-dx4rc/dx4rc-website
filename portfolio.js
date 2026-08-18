@@ -127,24 +127,24 @@ function parsePortfolioCSV(text) {
 }
 
 /**
- * GoogleドライブのURL（/file/d/FILE_ID/view等）を
- * <img> タグで直表示可能な形式へ自動変換するユーティリティ関数
+ * ★ 【重要】GoogleドライブのファイルID または URL を受け取り、
+ * 直リンク表示用URL（lh3.googleusercontent.com）へ変換するユーティリティ関数
  */
-function formatDriveImageUrl(url) {
-  if (!url) return '';
-  const trimmed = url.trim();
+function formatDriveImageUrl(imageIdOrUrl) {
+  if (!imageIdOrUrl) return '';
+  const val = imageIdOrUrl.trim();
 
-  // Googleドライブの共有リンクからファイルID（アルファベット・数字・ハイフン・アンダースコア）を抽出
-  const match = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/) || 
-                trimmed.match(/id=([a-zA-Z0-9_-]+)/);
-
-  if (match && match[1]) {
-    // 確実に直接画像描画ができるGoogle公式のサムネイル/プロファイル配信サーバープロキシへ変換
-    return `https://lh3.googleusercontent.com/d/${match[1]}`;
+  // 1. 完全なURL（http...）が過去データ等として入力されている場合
+  if (val.startsWith('http')) {
+    const match = val.match(/\/d\/([a-zA-Z0-9_-]+)/) || val.match(/id=([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      return `https://lh3.googleusercontent.com/d/${match[1]}`;
+    }
+    return val; // その他外部URLはそのまま返す
   }
 
-  // ドライブ以外の通常の画像直リンク（https://.../photo.png等）はそのまま返す
-  return trimmed;
+  // 2. 純粋なファイルID（1ABC123...）のみが保存されている場合
+  return `https://lh3.googleusercontent.com/d/${val}`;
 }
 
 // カードの動的描画
@@ -163,7 +163,7 @@ function renderPortfolio(items) {
     const description = item.description || '';
     const advice = item.advice || '';
     
-    // 画像URLを自動変換に通す
+    // G列（image_url）の値をファイルID/URL変換ロジックに通す
     const imageUrl = formatDriveImageUrl(item.image_url);
 
     const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
@@ -179,7 +179,7 @@ function renderPortfolio(items) {
       </button>
     ` : '';
 
-    // URLが存在していれば画像領域を生成（読み込み失敗時は onerror で自動的に非表示化）
+    // URL（ID）が存在していれば画像領域を生成
     const imageHTML = imageUrl 
       ? `<div style="width:100%; height:180px; overflow:hidden; border-radius:var(--radius); margin-bottom:1rem; background:#f1f5f9;">
           <img src="${imageUrl}" alt="" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.style.display='none'">
@@ -279,8 +279,10 @@ function setupPortfolioPost() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('pfSubmitBtn');
-    btn.disabled = true;
-    btn.innerText = '送信・画像保存中...';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = '送信・画像保存中...';
+    }
 
     const fileInput = document.getElementById('pfImageFile');
     const file = fileInput ? fileInput.files[0] : null;
@@ -296,8 +298,10 @@ function setupPortfolioPost() {
         imageType = file.type;
       } catch (err) {
         alert('画像の読み込みに失敗しました。');
-        btn.disabled = false;
-        btn.innerText = 'アイデアを公開する';
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = 'アイデアを公開する';
+        }
         return;
       }
     }
@@ -309,11 +313,11 @@ function setupPortfolioPost() {
     const payload = {
       action: 'add_portfolio',
       id: document.getElementById('pfId') ? document.getElementById('pfId').value.trim() : '',
-      title: document.getElementById('pfTitle').value.trim(),
-      category: document.getElementById('pfCategory').value.trim(),
+      title: document.getElementById('pfTitle') ? document.getElementById('pfTitle').value.trim() : '',
+      category: document.getElementById('pfCategory') ? document.getElementById('pfCategory').value.trim() : '',
       tags: selectedTags,
-      description: document.getElementById('pfDescription').value.trim(),
-      advice: document.getElementById('pfAdvice').value.trim(),
+      description: document.getElementById('pfDescription') ? document.getElementById('pfDescription').value.trim() : '',
+      advice: document.getElementById('pfAdvice') ? document.getElementById('pfAdvice').value.trim() : '',
       status: document.getElementById('pfStatus') ? document.getElementById('pfStatus').value : 'live',
       image_data: imageData,
       image_name: imageName,
@@ -333,8 +337,10 @@ function setupPortfolioPost() {
       setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
       alert('送信に失敗しました。');
-      btn.disabled = false;
-      btn.innerText = 'アイデアを公開する';
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'アイデアを公開する';
+      }
     }
   });
 }
@@ -345,177 +351,5 @@ function convertFileToBase64(file) {
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result);
     reader.onerror = error => reject(error);
-  });
-}
-// 投稿フォーム制御
-function setupPortfolioPost() {
-  const form = document.getElementById('portfolioPostForm');
-  console.log('フォーム要素の取得結果:', form); // ★デバッグ用ログを追加
-
-  if (!form) {
-    console.error('エラー: id="portfolioPostForm" が見つかりません。');
-    return;
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    console.log('送信処理が開始されました！'); // ★デバッグ用ログを追加
-
-    const btn = document.getElementById('pfSubmitBtn');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerText = '送信・画像保存中...';
-    }
-
-    const fileInput = document.getElementById('pfImageFile');
-    const file = fileInput ? fileInput.files[0] : null;
-
-    console.log('選択されたファイル:', file); // ★デバッグ用ログを追加
-
-    let imageData = '';
-    let imageName = '';
-    let imageType = '';
-
-    if (file) {
-      try {
-        imageData = await convertFileToBase64(file);
-        imageName = file.name;
-        imageType = file.type;
-        console.log('Base64変換成功. データ長:', imageData.length);
-      } catch (err) {
-        alert('画像の読み込みに失敗しました。');
-        if (btn) {
-          btn.disabled = false;
-          btn.innerText = 'アイデアを公開する';
-        }
-        return;
-      }
-    }
-
-    const selectedTags = Array.from(document.querySelectorAll('input[name="pfTag"]:checked'))
-      .map(cb => cb.value)
-      .join(', ');
-
-    const payload = {
-      action: 'add_portfolio',
-      id: document.getElementById('pfId') ? document.getElementById('pfId').value.trim() : '',
-      title: document.getElementById('pfTitle') ? document.getElementById('pfTitle').value.trim() : '',
-      category: document.getElementById('pfCategory') ? document.getElementById('pfCategory').value.trim() : '',
-      tags: selectedTags,
-      description: document.getElementById('pfDescription') ? document.getElementById('pfDescription').value.trim() : '',
-      advice: document.getElementById('pfAdvice') ? document.getElementById('pfAdvice').value.trim() : '',
-      status: document.getElementById('pfStatus') ? document.getElementById('pfStatus').value : 'live',
-      image_data: imageData,
-      image_name: imageName,
-      image_type: imageType
-    };
-
-    console.log('送信ペイロード:', payload);
-
-    try {
-      await fetch(GAS_WEBHOOK_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      alert('登録が完了しました！');
-      form.reset();
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (err) {
-      console.error('送信エラー:', err);
-      alert('送信に失敗しました。');
-      if (btn) {
-        btn.disabled = false;
-        btn.innerText = 'アイデアを公開する';
-      }
-    }
-  });
-}
-// 投稿フォーム制御
-function setupPortfolioPost() {
-  const form = document.getElementById('portfolioPostForm');
-  console.log('フォーム要素の取得結果:', form); // ★デバッグ用ログを追加
-
-  if (!form) {
-    console.error('エラー: id="portfolioPostForm" が見つかりません。');
-    return;
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    console.log('送信処理が開始されました！'); // ★デバッグ用ログを追加
-
-    const btn = document.getElementById('pfSubmitBtn');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerText = '送信・画像保存中...';
-    }
-
-    const fileInput = document.getElementById('pfImageFile');
-    const file = fileInput ? fileInput.files[0] : null;
-
-    console.log('選択されたファイル:', file); // ★デバッグ用ログを追加
-
-    let imageData = '';
-    let imageName = '';
-    let imageType = '';
-
-    if (file) {
-      try {
-        imageData = await convertFileToBase64(file);
-        imageName = file.name;
-        imageType = file.type;
-        console.log('Base64変換成功. データ長:', imageData.length);
-      } catch (err) {
-        alert('画像の読み込みに失敗しました。');
-        if (btn) {
-          btn.disabled = false;
-          btn.innerText = 'アイデアを公開する';
-        }
-        return;
-      }
-    }
-
-    const selectedTags = Array.from(document.querySelectorAll('input[name="pfTag"]:checked'))
-      .map(cb => cb.value)
-      .join(', ');
-
-    const payload = {
-      action: 'add_portfolio',
-      id: document.getElementById('pfId') ? document.getElementById('pfId').value.trim() : '',
-      title: document.getElementById('pfTitle') ? document.getElementById('pfTitle').value.trim() : '',
-      category: document.getElementById('pfCategory') ? document.getElementById('pfCategory').value.trim() : '',
-      tags: selectedTags,
-      description: document.getElementById('pfDescription') ? document.getElementById('pfDescription').value.trim() : '',
-      advice: document.getElementById('pfAdvice') ? document.getElementById('pfAdvice').value.trim() : '',
-      status: document.getElementById('pfStatus') ? document.getElementById('pfStatus').value : 'live',
-      image_data: imageData,
-      image_name: imageName,
-      image_type: imageType
-    };
-
-    console.log('送信ペイロード:', payload);
-
-    try {
-      await fetch(GAS_WEBHOOK_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      alert('登録が完了しました！');
-      form.reset();
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (err) {
-      console.error('送信エラー:', err);
-      alert('送信に失敗しました。');
-      if (btn) {
-        btn.disabled = false;
-        btn.innerText = 'アイデアを公開する';
-      }
-    }
   });
 }
