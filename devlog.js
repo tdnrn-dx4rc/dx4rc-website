@@ -3,7 +3,10 @@
  * 開発ログ & つぶやきの動的描画・管理者認証・削除スクリプト
  */
 
-// GAS（Google Apps Script）のWebアプリURL
+// スプレッドシートのCSV公開URL（devlogシート用）
+const DEVLOG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTb8LAj2QVhzVsviugEqJ78QEtvqzT_QH5m-UMbB2z_KNmMQM_I-laPdzdgmmNPlfKNbKeHFhibiZG/pub?gid=167591232&single=true&output=csv';
+
+// GAS（Google Apps Script）のWebアプリURL（投稿・削除・認証用）
 const GAS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzqJ725NV-30PS6kh05E_x1MX85nf5nWrvau0JYhSUEFUWHdXXI53ODHN74RmGZWXsr/exec';
 
 let allDevlogs = [];
@@ -13,21 +16,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const adminParam = urlParams.get('admin') === 'true';
 
-  // ?admin=true アクセス時にGAS通信認証を実施
   if (adminParam) {
     isAdmin = await authenticateAdmin();
     if (isAdmin) {
       const adminForm = document.getElementById('devlogAdminForm');
       if (adminForm) adminForm.style.display = 'block';
     } else {
-      // 認証失敗時はURLから ?admin=true を削除
       history.replaceState(null, '', window.location.pathname);
     }
   }
 
   setupDevlogPost();
 
-  // GASから最新ログデータを取得して描画
   allDevlogs = await fetchDevlogData();
   renderDevlogs(allDevlogs);
 });
@@ -66,17 +66,49 @@ async function authenticateAdmin() {
   }
 }
 
-// GAS (doGet) からログデータを取得
+// CSVデータの取得（スプレッドシートから直接取得）
 async function fetchDevlogData() {
-  try {
-    const res = await fetch(`${GAS_WEBHOOK_URL}?t=${Date.now()}`);
-    if (!res.ok) throw new Error('Fetch failed');
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    console.warn('Devlog データの取得に失敗しました:', err);
+  if (!DEVLOG_CSV_URL || DEVLOG_CSV_URL.includes('...')) {
     return [];
   }
+  try {
+    const res = await fetch(`${DEVLOG_CSV_URL}&t=${Date.now()}`);
+    if (!res.ok) throw new Error('Fetch failed');
+    const text = await res.text();
+    return parseDevlogCSV(text);
+  } catch (err) {
+    console.warn('Devlog CSVの取得に失敗しました:', err);
+    return [];
+  }
+}
+
+// CSVパース処理 [A:timestamp, B:type, C:title, D:body]
+function parseDevlogCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length <= 1) return [];
+
+  const list = [];
+
+  // ヘッダー行を除いて1行ずつ処理
+  lines.slice(1).forEach(line => {
+    // カンマ区切り（簡易パース）
+    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    if (values.length < 2) return;
+
+    const timestamp = values[0] || '';
+    const type = values[1] || 'micro';
+    const title = values[2] || '';
+    const body = values[3] || values[2] || ''; // 列順補正
+
+    list.push({
+      timestamp: timestamp,
+      type: type,
+      title: title,
+      body: body
+    });
+  });
+
+  return list.reverse(); // 最新順
 }
 
 // ログの描画
@@ -97,10 +129,8 @@ function renderDevlogs(items) {
 
     const titleHTML = item.title ? `<h3 style="font-size:1.1rem; margin-top:0.4rem; margin-bottom:0.4rem;">${item.title}</h3>` : '';
 
-    const timestampStr = item.date ? new Date(item.date).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
-
     const deleteBtnHTML = isAdmin ? `
-      <button onclick="deleteDevlogItem('${item.date}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; cursor:pointer; margin-left:8px;">
+      <button onclick="deleteDevlogItem('${item.timestamp}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; cursor:pointer; margin-left:8px;">
         🗑 削除
       </button>
     ` : '';
@@ -110,27 +140,20 @@ function renderDevlogs(items) {
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
           <div style="display:flex; align-items:center;">
             ${badgeHTML}
-            <span style="font-size:0.8rem; color:var(--color-text-muted); margin-left:8px;">${timestampStr}</span>
+            <span style="font-size:0.8rem; color:var(--color-text-muted); margin-left:8px;">${item.timestamp}</span>
           </div>
           ${deleteBtnHTML}
         </div>
         ${titleHTML}
-        <p style="color:var(--color-text); font-size:0.95rem; line-height:1.6; white-space:pre-wrap; margin:0;">${item.body || item.content || ''}</p>
+        <p style="color:var(--color-text); font-size:0.95rem; line-height:1.6; white-space:pre-wrap; margin:0;">${item.body}</p>
       </article>
     `;
   }).join('');
 }
 
-// 開発ログの論理削除処理
+// 削除処理
 async function deleteDevlogItem(timestamp) {
-  if (!timestamp) {
-    alert('タイムスタンプが取得できませんでした。');
-    return;
-  }
-
-  if (!confirm('この投稿を削除しますか？')) {
-    return;
-  }
+  if (!timestamp || !confirm('この投稿を削除しますか？')) return;
 
   try {
     await fetch(GAS_WEBHOOK_URL, {
@@ -140,7 +163,6 @@ async function deleteDevlogItem(timestamp) {
         timestamp: timestamp
       })
     });
-
     alert('削除完了しました。');
     window.location.reload();
   } catch (err) {
@@ -148,7 +170,7 @@ async function deleteDevlogItem(timestamp) {
   }
 }
 
-// PC管理者モード用 開発ログ投稿処理
+// 投稿処理
 function setupDevlogPost() {
   const form = document.getElementById('devlogPostForm');
   if (!form) return;
@@ -169,7 +191,7 @@ function setupDevlogPost() {
     };
 
     try {
-      const res = await fetch(GAS_WEBHOOK_URL, {
+      await fetch(GAS_WEBHOOK_URL, {
         method: 'POST',
         body: JSON.stringify(payload)
       });
