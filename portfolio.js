@@ -1,4 +1,4 @@
-// スプレッドシートのCSV公開URL
+// スプレッドシートのCSV公開URL (portfolio用)
 const PORTFOLIO_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTb8LAj2QVhzVsviugEqJ78QEtvqzT_QH5m-UMbB2z_KNnMQM_l-IaPdzdgmmNPlfKNbKeHFhibiZG/pub?gid=0&single=true&output=csv';
 
 // GASのWebアプリURL
@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderPortfolio(allPortfolioItems);
 });
 
+// 管理者認証
 async function authenticateAdmin() {
   if (sessionStorage.getItem('dx4rc_admin_authed') === 'true') {
     return true;
@@ -62,6 +63,7 @@ async function authenticateAdmin() {
   }
 }
 
+// データ取得（キャッシュ回避）
 async function fetchPortfolioData() {
   if (!PORTFOLIO_CSV_URL || PORTFOLIO_CSV_URL.includes('...')) return [];
   try {
@@ -75,7 +77,7 @@ async function fetchPortfolioData() {
   }
 }
 
-// カンマや改行・ダブルクォーテーションを正しくパースする関数
+// カンマや改行を含むセルを崩さずにパースする関数
 function parseCSVLine(line) {
   const result = [];
   let start = 0;
@@ -113,7 +115,7 @@ function parsePortfolioCSV(text) {
     const values = parseCSVLine(line);
     const item = {};
     headers.forEach((h, idx) => {
-      item[h] = values[idx] || '';
+      item[h.trim()] = values[idx] ? values[idx].trim() : '';
     });
 
     if (item.status !== 'deleted') {
@@ -124,6 +126,28 @@ function parsePortfolioCSV(text) {
   return list.reverse();
 }
 
+/**
+ * GoogleドライブのURL（/file/d/FILE_ID/view等）を
+ * <img> タグで直表示可能な形式へ自動変換するユーティリティ関数
+ */
+function formatDriveImageUrl(url) {
+  if (!url) return '';
+  const trimmed = url.trim();
+
+  // Googleドライブの共有リンクからファイルID（アルファベット・数字・ハイフン・アンダースコア）を抽出
+  const match = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/) || 
+                trimmed.match(/id=([a-zA-Z0-9_-]+)/);
+
+  if (match && match[1]) {
+    // 確実に直接画像描画ができるGoogle公式のサムネイル/プロファイル配信サーバープロキシへ変換
+    return `https://lh3.googleusercontent.com/d/${match[1]}`;
+  }
+
+  // ドライブ以外の通常の画像直リンク（https://.../photo.png等）はそのまま返す
+  return trimmed;
+}
+
+// カードの動的描画
 function renderPortfolio(items) {
   const container = document.getElementById('portfolioGrid');
   if (!container) return;
@@ -134,7 +158,15 @@ function renderPortfolio(items) {
   }
 
   container.innerHTML = items.map(item => {
-    const tags = item.tags ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const category = item.category || 'カテゴリなし';
+    const tagsStr = item.tags || '';
+    const description = item.description || '';
+    const advice = item.advice || '';
+    
+    // 画像URLを自動変換に通す
+    const imageUrl = formatDriveImageUrl(item.image_url);
+
+    const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
     const tagBadges = tags.map(t => `<span class="tag-badge" style="background:var(--color-bg); padding:2px 8px; border-radius:4px; font-size:0.75rem; color:var(--color-text-muted); margin-right:4px;">#${t}</span>`).join('');
 
     const statusBadge = item.status === 'wip' 
@@ -147,17 +179,17 @@ function renderPortfolio(items) {
       </button>
     ` : '';
 
-    // 画像が存在する場合のみ表示し、表示失敗時（onerror）は非表示にする
-    const imageHTML = (item.image_url && item.image_url.startsWith('http')) 
+    // URLが存在していれば画像領域を生成（読み込み失敗時は onerror で自動的に非表示化）
+    const imageHTML = imageUrl 
       ? `<div style="width:100%; height:180px; overflow:hidden; border-radius:var(--radius); margin-bottom:1rem; background:#f1f5f9;">
-          <img src="${item.image_url}" alt="" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.style.display='none'">
+          <img src="${imageUrl}" alt="" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.style.display='none'">
          </div>`
       : '';
 
-    const adviceHTML = item.advice 
+    const adviceHTML = advice 
       ? `<div style="margin-top:1rem; padding:0.8rem 1rem; background:var(--color-bg); border-left:3px solid var(--color-primary); border-radius:4px; font-size:0.88rem; color:var(--color-text);">
           <strong style="color:var(--color-primary); display:block; margin-bottom:0.2rem;">💡 実装のアドバイス・コツ:</strong>
-          <p style="margin:0; white-space:pre-wrap;">${item.advice}</p>
+          <p style="margin:0; white-space:pre-wrap;">${advice}</p>
          </div>`
       : '';
 
@@ -166,14 +198,14 @@ function renderPortfolio(items) {
         <div>
           ${imageHTML}
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-            <span style="font-size:0.8rem; font-weight:bold; color:var(--color-primary);">${item.category || 'アイデア'}</span>
+            <span style="font-size:0.8rem; font-weight:bold; color:var(--color-primary);">${category}</span>
             <div>
               ${statusBadge}
               ${deleteBtnHTML}
             </div>
           </div>
           <h3 style="font-size:1.2rem; margin-bottom:0.5rem;">${item.title}</h3>
-          <p style="color:var(--color-text-muted); font-size:0.95rem; line-height:1.6; white-space:pre-wrap; margin-bottom:0.75rem;">${item.description}</p>
+          <p style="color:var(--color-text-muted); font-size:0.95rem; line-height:1.6; white-space:pre-wrap; margin-bottom:0.75rem;">${description}</p>
           ${adviceHTML}
         </div>
         <div style="margin-top:1rem; padding-top:0.5rem; border-top:1px solid var(--color-border);">
@@ -184,6 +216,7 @@ function renderPortfolio(items) {
   }).join('');
 }
 
+// 削除処理
 async function deletePortfolioItem(id) {
   if (!id || !confirm(`ID: "${id}" の成果品を削除しますか？`)) return;
 
@@ -202,6 +235,7 @@ async function deletePortfolioItem(id) {
   }
 }
 
+// 検索・フィルタリング制御
 function setupSearchAndFilter() {
   const searchInput = document.getElementById('searchInput');
   const filterButtons = document.querySelectorAll('.btn-filter');
@@ -237,6 +271,7 @@ function setupSearchAndFilter() {
   });
 }
 
+// 投稿フォーム制御
 function setupPortfolioPost() {
   const form = document.getElementById('portfolioPostForm');
   if (!form) return;
