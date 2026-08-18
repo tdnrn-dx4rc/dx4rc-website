@@ -3,9 +3,6 @@
  * 開発ログ & つぶやきの動的描画・管理者認証・削除スクリプト
  */
 
-// スプレッドシートのCSV公開URL（devlogシート用: gid=XXXX&single=true&output=csv）
-const DEVLOG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/.../pub?gid=XXXXX&single=true&output=csv';
-
 // GAS（Google Apps Script）のWebアプリURL
 const GAS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzqJ725NV-30PS6kh05E_x1MX85nf5nWrvau0JYhSUEFUWHdXXI53ODHN74RmGZWXsr/exec';
 
@@ -30,6 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   setupDevlogPost();
 
+  // GASから最新ログデータを取得して描画
   allDevlogs = await fetchDevlogData();
   renderDevlogs(allDevlogs);
 });
@@ -68,43 +66,17 @@ async function authenticateAdmin() {
   }
 }
 
-// CSVデータの取得（キャッシュ回避）
+// GAS (doGet) からログデータを取得
 async function fetchDevlogData() {
-  if (!DEVLOG_CSV_URL || DEVLOG_CSV_URL.includes('...')) {
-    return [];
-  }
   try {
-    const res = await fetch(`${DEVLOG_CSV_URL}&t=${Date.now()}`);
+    const res = await fetch(`${GAS_WEBHOOK_URL}?t=${Date.now()}`);
     if (!res.ok) throw new Error('Fetch failed');
-    const text = await res.text();
-    return parseDevlogCSV(text);
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch (err) {
-    console.warn('Devlog CSVの取得に失敗しました:', err);
+    console.warn('Devlog データの取得に失敗しました:', err);
     return [];
   }
-}
-
-// CSVパース処理 [A:timestamp, B:type, C:content, D:title, E:status]
-function parseDevlogCSV(text) {
-  const lines = text.trim().split('\n');
-  if (lines.length <= 1) return [];
-
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-  const list = [];
-
-  lines.slice(1).forEach(line => {
-    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-    const item = headers.reduce((obj, header, index) => {
-      obj[header] = values[index] || '';
-      return obj;
-    }, {});
-
-    if (item.status !== 'deleted') {
-      list.push(item);
-    }
-  });
-
-  return list.reverse(); // 新しい順に並び替え
 }
 
 // ログの描画
@@ -120,13 +92,15 @@ function renderDevlogs(items) {
   container.innerHTML = items.map(item => {
     const isSlack = item.type === 'micro' || item.type === 'slack';
     const badgeHTML = isSlack
-      ? `<span style="background:#e0f2fe; color:#0369a1; font-size:0.75rem; font-weight:bold; padding:2px 8px; border-radius:12px;">💬 Slackつぶやき</span>`
+      ? `<span style="background:#e0f2fe; color:#0369a1; font-size:0.75rem; font-weight:bold; padding:2px 8px; border-radius:12px;">💬 つぶやき</span>`
       : `<span style="background:#f3e8ff; color:#6b21a8; font-size:0.75rem; font-weight:bold; padding:2px 8px; border-radius:12px;">📝 開発記録</span>`;
 
     const titleHTML = item.title ? `<h3 style="font-size:1.1rem; margin-top:0.4rem; margin-bottom:0.4rem;">${item.title}</h3>` : '';
 
+    const timestampStr = item.date ? new Date(item.date).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+
     const deleteBtnHTML = isAdmin ? `
-      <button onclick="deleteDevlogItem('${item.timestamp}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; cursor:pointer; margin-left:8px;">
+      <button onclick="deleteDevlogItem('${item.date}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; cursor:pointer; margin-left:8px;">
         🗑 削除
       </button>
     ` : '';
@@ -136,12 +110,12 @@ function renderDevlogs(items) {
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
           <div style="display:flex; align-items:center;">
             ${badgeHTML}
-            <span style="font-size:0.8rem; color:var(--color-text-muted); margin-left:8px;">${item.timestamp}</span>
+            <span style="font-size:0.8rem; color:var(--color-text-muted); margin-left:8px;">${timestampStr}</span>
           </div>
           ${deleteBtnHTML}
         </div>
         ${titleHTML}
-        <p style="color:var(--color-text); font-size:0.95rem; line-height:1.6; white-space:pre-wrap; margin:0;">${item.content || item.text || ''}</p>
+        <p style="color:var(--color-text); font-size:0.95rem; line-height:1.6; white-space:pre-wrap; margin:0;">${item.body || item.content || ''}</p>
       </article>
     `;
   }).join('');
@@ -154,23 +128,21 @@ async function deleteDevlogItem(timestamp) {
     return;
   }
 
-  if (!confirm(`"${timestamp}" の投稿を削除しますか？`)) {
+  if (!confirm('この投稿を削除しますか？')) {
     return;
   }
 
   try {
     await fetch(GAS_WEBHOOK_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        action: 'delete',
+        action: 'delete_devlog',
         timestamp: timestamp
       })
     });
 
-    alert('削除マークを付けました。');
-    setTimeout(() => window.location.reload(), 1000);
+    alert('削除完了しました。');
+    window.location.reload();
   } catch (err) {
     alert('削除処理に失敗しました。');
   }
@@ -190,22 +162,21 @@ function setupDevlogPost() {
     }
 
     const payload = {
+      action: 'add_devlog',
       type: document.getElementById('dlType') ? document.getElementById('dlType').value : 'macro',
       title: document.getElementById('dlTitle') ? document.getElementById('dlTitle').value.trim() : '',
-      text: document.getElementById('dlContent') ? document.getElementById('dlContent').value.trim() : ''
+      body: document.getElementById('dlContent') ? document.getElementById('dlContent').value.trim() : ''
     };
 
     try {
-      await fetch(GAS_WEBHOOK_URL, {
+      const res = await fetch(GAS_WEBHOOK_URL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       alert('ログを投稿しました！');
       form.reset();
-      setTimeout(() => window.location.reload(), 1500);
+      window.location.reload();
     } catch (err) {
       alert('送信に失敗しました。');
       if (btn) {
