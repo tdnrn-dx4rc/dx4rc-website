@@ -127,7 +127,7 @@ function parsePortfolioCSV(text) {
 }
 
 /**
- * ★ 【重要】GoogleドライブのファイルID または URL を受け取り、
+ * GoogleドライブのファイルID または URL を受け取り、
  * 直リンク表示用URL（lh3.googleusercontent.com）へ変換するユーティリティ関数
  */
 function formatDriveImageUrl(imageIdOrUrl) {
@@ -140,7 +140,7 @@ function formatDriveImageUrl(imageIdOrUrl) {
     if (match && match[1]) {
       return `https://lh3.googleusercontent.com/d/${match[1]}`;
     }
-    return val; // その他外部URLはそのまま返す
+    return val;
   }
 
   // 2. 純粋なファイルID（1ABC123...）のみが保存されている場合
@@ -163,7 +163,6 @@ function renderPortfolio(items) {
     const description = item.description || '';
     const advice = item.advice || '';
     
-    // G列（image_url）の値をファイルID/URL変換ロジックに通す
     const imageUrl = formatDriveImageUrl(item.image_url);
 
     const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
@@ -179,7 +178,6 @@ function renderPortfolio(items) {
       </button>
     ` : '';
 
-    // URL（ID）が存在していれば画像領域を生成
     const imageHTML = imageUrl 
       ? `<div style="width:100%; height:180px; overflow:hidden; border-radius:var(--radius); margin-bottom:1rem; background:#f1f5f9;">
           <img src="${imageUrl}" alt="" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.style.display='none'">
@@ -285,7 +283,7 @@ function setupPortfolioPost() {
     }
 
     const fileInput = document.getElementById('pfImageFile');
-    const file = fileInput ? fileInput.files[0] : null;
+    const file = (fileInput && fileInput.files && fileInput.files.length > 0) ? fileInput.files[0] : null;
 
     let imageData = '';
     let imageName = '';
@@ -297,6 +295,7 @@ function setupPortfolioPost() {
         imageName = file.name;
         imageType = file.type;
       } catch (err) {
+        console.error('画像読み込みエラー:', err);
         alert('画像の読み込みに失敗しました。');
         if (btn) {
           btn.disabled = false;
@@ -348,8 +347,8 @@ function setupPortfolioPost() {
 function convertFileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result);
     reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
   });
 }
