@@ -66,13 +66,21 @@ async function authenticateAdmin() {
   }
 }
 
-// CSVデータの取得（スプレッドシートから直接取得）
+// CSVデータの取得（404発生時の自動リトライ機能付き）
 async function fetchDevlogData() {
   if (!DEVLOG_CSV_URL || DEVLOG_CSV_URL.includes('...')) {
     return [];
   }
   try {
-    const res = await fetch(`${DEVLOG_CSV_URL}&t=${Date.now()}`);
+    // 1回目: キャッシュ回避パラメータ付きで取得
+    let res = await fetch(`${DEVLOG_CSV_URL}&t=${Date.now()}`);
+    
+    // 404等のエラーが出た場合、パラメータ無しの基本URLでリトライ
+    if (!res.ok) {
+      console.warn('キャッシュ回避URLで失敗したため、基本URLで再試行します');
+      res = await fetch(DEVLOG_CSV_URL);
+    }
+
     if (!res.ok) throw new Error('Fetch failed');
     const text = await res.text();
     return parseDevlogCSV(text);
@@ -84,7 +92,7 @@ async function fetchDevlogData() {
 
 /**
  * 改行・ダブルクォーテーションに対応したCSVパース処理
- * 正しい列構造 [A:timestamp, B:type, C:title, D:content, E:status]
+ * [A:timestamp, B:type, C:title, D:content, E:status]
  */
 function parseDevlogCSV(text) {
   if (!text) return [];
@@ -144,7 +152,7 @@ function parseDevlogCSV(text) {
     const content = values[3] || '';
     const status = values[4] || '';
 
-    // 削除済み (status === 'deleted') のものは表示から除外
+    // 削除済み (status === 'deleted') は除外
     if (status.toLowerCase() === 'deleted') {
       return;
     }
@@ -176,7 +184,6 @@ function renderDevlogs(items) {
       ? `<span style="background:#e0f2fe; color:#0369a1; font-size:0.75rem; font-weight:bold; padding:2px 8px; border-radius:12px;">💬 つぶやき</span>`
       : `<span style="background:#f3e8ff; color:#6b21a8; font-size:0.75rem; font-weight:bold; padding:2px 8px; border-radius:12px;">📝 開発記録</span>`;
 
-    // タイトルが存在し、かつ本文と異なる場合のみタイトル（太字見出し）を表示
     const showTitle = item.title && item.title !== item.body;
     const titleHTML = showTitle ? `<h3 style="font-size:1.1rem; margin-top:0.4rem; margin-bottom:0.4rem; color:var(--color-text-main); font-weight:700;">${item.title}</h3>` : '';
 
