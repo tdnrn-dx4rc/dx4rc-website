@@ -4,7 +4,7 @@
  */
 
 // スプレッドシートのCSV公開URL（devlogシート用）
-const DEVLOG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTb8LAj2QVhzVsviugEqJ78QEtvqzT_QH5m-UMbB2z_KNmMQM_I-laPdzdgmmNPlfKNbKeHFhibiZG/pub?gid=167591232&single=true&output=csv';
+const DEVLOG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTb8LAj2QVhzVsviugEqJ78QEtvqzT_QH5m-UMbB2z_KNnMQM_l-IaPdzdgmmNPlfKNbKeHFhibiZG/pub?gid=167591232&single=true&output=csv';
 
 // GAS（Google Apps Script）のWebアプリURL（投稿・削除・認証用）
 const GAS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzqJ725NV-30PS6kh05E_x1MX85nf5nWrvau0JYhSUEFUWHdXXI53ODHN74RmGZWXsr/exec';
