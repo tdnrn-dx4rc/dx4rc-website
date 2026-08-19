@@ -1,5 +1,7 @@
-// スプレッドシートのCSV公開URL (portfolio用)
-const PORTFOLIO_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTb8LAj2QVhzVsviugEqJ78QEtvqzT_QH5m-UMbB2z_KNnMQM_l-IaPdzdgmmNPlfKNbKeHFhibiZG/pub?gid=0&single=true&output=csv';
+/**
+ * portfolio.js
+ * 成果品ギャラリーの動的描画・検索・管理者認証・削除スクリプト（GAS API連携版）
+ */
 
 // GASのWebアプリURL
 const GAS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzqJ725NV-30PS6kh05E_x1MX85nf5nWrvau0JYhSUEFUWHdXXI53ODHN74RmGZWXsr/exec';
@@ -63,67 +65,17 @@ async function authenticateAdmin() {
   }
 }
 
-// データ取得（キャッシュ回避）
+// GAS (doGet) からポートフォリオデータを取得
 async function fetchPortfolioData() {
-  if (!PORTFOLIO_CSV_URL || PORTFOLIO_CSV_URL.includes('...')) return [];
   try {
-    const res = await fetch(`${PORTFOLIO_CSV_URL}&t=${Date.now()}`);
+    const res = await fetch(`${GAS_WEBHOOK_URL}?type=portfolio&t=${Date.now()}`);
     if (!res.ok) throw new Error('Fetch failed');
-    const text = await res.text();
-    return parsePortfolioCSV(text);
+    const data = await res.json();
+    return Array.isArray(data) ? data.filter(item => item.status !== 'deleted') : [];
   } catch (err) {
-    console.warn('Portfolio CSVの取得に失敗しました:', err);
+    console.warn('Portfolio データの取得に失敗しました:', err);
     return [];
   }
-}
-
-// カンマや改行を含むセルを崩さずにパースする関数
-function parseCSVLine(line) {
-  const result = [];
-  let start = 0;
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    if (line[i] === '"') {
-      inQuotes = !inQuotes;
-    } else if (line[i] === ',' && !inQuotes) {
-      let val = line.substring(start, i).trim();
-      if (val.startsWith('"') && val.endsWith('"')) {
-        val = val.substring(1, val.length - 1).replace(/""/g, '"');
-      }
-      result.push(val);
-      start = i + 1;
-    }
-  }
-  let lastVal = line.substring(start).trim();
-  if (lastVal.startsWith('"') && lastVal.endsWith('"')) {
-    lastVal = lastVal.substring(1, lastVal.length - 1).replace(/""/g, '"');
-  }
-  result.push(lastVal);
-  return result;
-}
-
-function parsePortfolioCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length <= 1) return [];
-
-  const headers = parseCSVLine(lines[0]);
-  const list = [];
-
-  lines.slice(1).forEach(line => {
-    if (!line.trim()) return;
-    const values = parseCSVLine(line);
-    const item = {};
-    headers.forEach((h, idx) => {
-      item[h.trim()] = values[idx] ? values[idx].trim() : '';
-    });
-
-    if (item.status !== 'deleted') {
-      list.push(item);
-    }
-  });
-
-  return list.reverse();
 }
 
 /**
@@ -132,9 +84,8 @@ function parsePortfolioCSV(text) {
  */
 function formatDriveImageUrl(imageIdOrUrl) {
   if (!imageIdOrUrl) return '';
-  const val = imageIdOrUrl.trim();
+  const val = String(imageIdOrUrl).trim();
 
-  // 1. 完全なURL（http...）が過去データ等として入力されている場合
   if (val.startsWith('http')) {
     const match = val.match(/\/d\/([a-zA-Z0-9_-]+)/) || val.match(/id=([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
@@ -143,7 +94,6 @@ function formatDriveImageUrl(imageIdOrUrl) {
     return val;
   }
 
-  // 2. 純粋なファイルID（1ABC123...）のみが保存されている場合
   return `https://lh3.googleusercontent.com/d/${val}`;
 }
 
@@ -202,7 +152,7 @@ function renderPortfolio(items) {
               ${deleteBtnHTML}
             </div>
           </div>
-          <h3 style="font-size:1.2rem; margin-bottom:0.5rem;">${item.title}</h3>
+          <h3 style="font-size:1.2rem; margin-bottom:0.5rem;">${item.title || ''}</h3>
           <p style="color:var(--color-text-muted); font-size:0.95rem; line-height:1.6; white-space:pre-wrap; margin-bottom:0.75rem;">${description}</p>
           ${adviceHTML}
         </div>
@@ -221,13 +171,11 @@ async function deletePortfolioItem(id) {
   try {
     await fetch(GAS_WEBHOOK_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'delete_portfolio', id: id })
     });
 
-    alert('削除マークを付けました。');
-    setTimeout(() => window.location.reload(), 1000);
+    alert('削除しました。');
+    window.location.reload();
   } catch (err) {
     alert('削除処理に失敗しました。');
   }
@@ -271,7 +219,7 @@ function setupSearchAndFilter() {
 
 // 投稿フォーム制御
 function setupPortfolioPost() {
-  const form = document.getElementById('portfolioPostForm');
+  const form = document.getElementById('portfolioAdminForm') || document.getElementById('portfolioPostForm');
   if (!form) return;
 
   form.addEventListener('submit', async (e) => {
@@ -326,14 +274,12 @@ function setupPortfolioPost() {
     try {
       await fetch(GAS_WEBHOOK_URL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       alert('登録が完了しました！');
       form.reset();
-      setTimeout(() => window.location.reload(), 1500);
+      window.location.reload();
     } catch (err) {
       alert('送信に失敗しました。');
       if (btn) {
@@ -344,7 +290,7 @@ function setupPortfolioPost() {
   });
 }
 
-// 送信画像を自動でリサイズ＆軽量化してBase64化する関数
+// 送信画像を自動リサイズ＆圧縮してBase64化する関数
 function convertFileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -354,7 +300,7 @@ function convertFileToBase64(file) {
       img.src = e.target.result;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1000; // 横幅最大1000pxにリサイズ
+        const MAX_WIDTH = 1000;
         let width = img.width;
         let height = img.height;
 
@@ -368,7 +314,6 @@ function convertFileToBase64(file) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        // JPEG 80%品質で圧縮
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
         resolve(compressedBase64);
       };
