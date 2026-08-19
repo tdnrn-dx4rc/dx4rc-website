@@ -4,7 +4,7 @@
  */
 
 // スプレッドシートのCSV公開URL（devlogシート用）
-const DEVLOG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTb8LAj2QVhzVsviugEqJ78QEtvqzT_QH5m-UMbB2z_KNnMQM_l-IaPdzdgmmNPlfKNbKeHFhibiZG/pub?gid=167591232&single=true&output=csv';
+const DEVLOG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTb8LAj2QVhzVsviugEqJ78QEtvqzT_QH5m-UMbB2z_KNmMQM_I-laPdzdgmmNPlfKNbKeHFhibiZG/pub?gid=167591232&single=true&output=csv';
 
 // GAS（Google Apps Script）のWebアプリURL（投稿・削除・認証用）
 const GAS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzqJ725NV-30PS6kh05E_x1MX85nf5nWrvau0JYhSUEFUWHdXXI53ODHN74RmGZWXsr/exec';
@@ -83,7 +83,8 @@ async function fetchDevlogData() {
 }
 
 /**
- * 改行・ダブルクォーテーションに対応した堅牢なCSVパース処理
+ * 改行・ダブルクォーテーションに対応したCSVパース処理
+ * 正しい列構造 [A:timestamp, B:type, C:title, D:content, E:status]
  */
 function parseDevlogCSV(text) {
   if (!text) return [];
@@ -129,8 +130,8 @@ function parseDevlogCSV(text) {
 
   if (rows.length === 0) return [];
 
-  // ヘッダー行（または日付でない行）のスキップ判定
-  const isFirstRowHeader = isNaN(Date.parse(rows[0][0]));
+  // ヘッダー行をスキップ
+  const isFirstRowHeader = rows[0][0] === 'timestamp' || isNaN(Date.parse(rows[0][0]));
   const dataRows = isFirstRowHeader ? rows.slice(1) : rows;
 
   const list = [];
@@ -138,34 +139,25 @@ function parseDevlogCSV(text) {
     if (values.length < 2) return;
 
     const timestamp = values[0] || '';
-    const colB = values[1] || '';
-    const colC = values[2] || '';
-    const colD = values[3] || '';
+    const type = values[1] || 'micro';
+    const title = values[2] || '';
+    const content = values[3] || '';
+    const status = values[4] || '';
 
-    // 列順の揺れ（過去ログと最新ログ）を吸収
-    let type = 'micro';
-    let title = '';
-    let body = colD || colC;
-
-    if (colB === 'micro' || colB === 'macro' || colB === 'slack') {
-      type = colB;
-      title = colC;
-    } else if (colC === 'micro' || colC === 'macro' || colC === 'slack') {
-      type = colC;
-      title = colB;
-    } else {
-      title = colB;
+    // 削除済み (status === 'deleted') のものは表示から除外
+    if (status.toLowerCase() === 'deleted') {
+      return;
     }
 
     list.push({
       timestamp: timestamp,
       type: type,
       title: title,
-      body: body
+      body: content
     });
   });
 
-  return list.reverse(); // 最新順に並び替え
+  return list.reverse(); // 最新順
 }
 
 // ログの描画
@@ -184,7 +176,9 @@ function renderDevlogs(items) {
       ? `<span style="background:#e0f2fe; color:#0369a1; font-size:0.75rem; font-weight:bold; padding:2px 8px; border-radius:12px;">💬 つぶやき</span>`
       : `<span style="background:#f3e8ff; color:#6b21a8; font-size:0.75rem; font-weight:bold; padding:2px 8px; border-radius:12px;">📝 開発記録</span>`;
 
-    const titleHTML = item.title ? `<h3 style="font-size:1.1rem; margin-top:0.4rem; margin-bottom:0.4rem;">${item.title}</h3>` : '';
+    // タイトルが存在し、かつ本文と異なる場合のみタイトル（太字見出し）を表示
+    const showTitle = item.title && item.title !== item.body;
+    const titleHTML = showTitle ? `<h3 style="font-size:1.1rem; margin-top:0.4rem; margin-bottom:0.4rem; color:var(--color-text-main); font-weight:700;">${item.title}</h3>` : '';
 
     const deleteBtnHTML = isAdmin ? `
       <button onclick="deleteDevlogItem('${item.timestamp}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; cursor:pointer; margin-left:8px;">
